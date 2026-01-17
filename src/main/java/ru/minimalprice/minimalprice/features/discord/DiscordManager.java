@@ -52,10 +52,10 @@ public class DiscordManager implements Listener {
              }
              
              if (isDiscordReady()) {
+                 initialized = true;
                  plugin.getLogger().info("DiscordSRV is ready! Initializing DiscordRestUtil...");
                  restUtil = new DiscordRestUtil(plugin);
                  performStartupCleanup();
-                 initialized = true;
                  task.cancel();
              } else {
                  // plugin.getLogger().info("DiscordSRV not ready yet...");

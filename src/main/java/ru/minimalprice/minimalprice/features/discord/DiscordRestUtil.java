@@ -20,9 +20,23 @@ public class DiscordRestUtil {
     private final Gson gson;
     private final JavaPlugin plugin;
 
+
     public DiscordRestUtil(JavaPlugin plugin) {
         this.plugin = plugin;
-        this.botToken = DiscordSRV.getPlugin().getJda().getToken();
+        // Try getting token from JDA first, then config
+        String token = DiscordSRV.getPlugin().getJda().getToken();
+        if (token == null || token.isEmpty() || token.equalsIgnoreCase("BOT_TOKEN_HERE")) {
+             token = DiscordSRV.getPlugin().getConfig().getString("BotToken");
+        }
+        
+        if (token != null && token.length() > 10) {
+            String masked = token.substring(0, 5) + "..." + token.substring(token.length() - 5);
+            plugin.getLogger().info("DiscordRestUtil initialized with token: " + masked);
+        } else {
+            plugin.getLogger().warning("DiscordRestUtil: Could not retrieve Valid Bot Token!");
+        }
+        
+        this.botToken = token;
         this.httpClient = HttpClient.newHttpClient();
         this.gson = new Gson();
     }
