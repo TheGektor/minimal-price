@@ -218,8 +218,8 @@ public class DiscordManager implements Listener {
         StringBuilder desc = new StringBuilder();
         
         // Header: Market Analysis
-        desc.append("**").append(cm.getMessage("discord_market_analysis")).append("**\n");
-        desc.append("▎ ").append(cm.getMessage("discord_total_positions").replace("%count%", String.valueOf(products.size()))).append("\n");
+        desc.append("**").append(cm.getRawMessage("discord_market_analysis")).append("**\n");
+        desc.append("▎ ").append(cm.getRawMessage("discord_total_positions").replace("%count%", String.valueOf(products.size()))).append("\n");
         desc.append("────────────────────────\n\n");
         
         if (products.isEmpty()) {
@@ -232,7 +232,7 @@ public class DiscordManager implements Listener {
                 
                 // Code block with prices
                 desc.append("```yaml\n");
-                String priceBlock = cm.getMessage("discord_price_block")
+                String priceBlock = cm.getRawMessage("discord_price_block")
                         .replace("%price%", String.valueOf(p.getPrice()))
                         .replace("%currency%", currency);
                 desc.append(priceBlock).append("\n");
@@ -243,7 +243,7 @@ public class DiscordManager implements Listener {
         embed.addProperty("description", desc.toString());
         
         JsonObject footer = new JsonObject();
-        String footerText = cm.getMessage("discord_embed_footer").replace("%date%", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+        String footerText = cm.getRawMessage("discord_embed_footer").replace("%date%", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
         footer.addProperty("text", footerText);
         // Icon for footer?
         // footer.addProperty("icon_url", "...");
