@@ -19,6 +19,11 @@ public final class MinimalPrice extends JavaPlugin {
     public void onEnable() {
         // 1. Config
         saveDefaultConfig();
+        
+        // Save languages
+        saveResource("languages/messages_en.yml", false);
+        saveResource("languages/messages_ru.yml", false);
+        
         this.configManager = new ConfigManager(this);
 
         // 2. Database
