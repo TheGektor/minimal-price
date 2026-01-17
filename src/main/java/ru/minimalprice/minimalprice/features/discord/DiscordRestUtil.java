@@ -29,6 +29,11 @@ public class DiscordRestUtil {
              token = DiscordSRV.getPlugin().getConfig().getString("BotToken");
         }
         
+        // Sanitize token: remove "Bot " prefix if present (user might have pasted it in config)
+        if (token != null && token.startsWith("Bot ")) {
+            token = token.substring(4);
+        }
+        
         if (token != null && token.length() > 10) {
             String masked = token.substring(0, 5) + "..." + token.substring(token.length() - 5);
             plugin.getLogger().info("DiscordRestUtil initialized with token: " + masked);
