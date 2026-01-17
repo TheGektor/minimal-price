@@ -205,25 +205,48 @@ public class DiscordManager implements Listener {
 
     private JsonObject buildEmbed(String categoryName, List<Product> products) {
         JsonObject embed = new JsonObject();
-        embed.addProperty("title", categoryName + " - Minimal Prices");
-        embed.addProperty("color", 16753920); // Orange
         
-        StringBuilder desc = new StringBuilder();
+        // Title? User screenshot shows "Category Name" with icon. We don't have icons, just use Name.
+        embed.addProperty("title", "📦 " + categoryName);
+        embed.addProperty("color", 3447003); // Dark background-ish or specific color? User used dark grey in screenshot, side bar color?
+        // Screenshot side bar is blue-ish or custom. Let's use a nice Blue for "Market". 
+        // 0x3498db (3447003) is a nice blue.
+        
+        ru.minimalprice.minimalprice.configuration.ConfigManager cm = new ru.minimalprice.minimalprice.configuration.ConfigManager(plugin);
         String currency = plugin.getConfig().getString("currency", "$");
         
-        if (products == null || products.isEmpty()) {
-            desc.append("No items yet.");
+        StringBuilder desc = new StringBuilder();
+        
+        // Header: Market Analysis
+        desc.append("**").append(cm.getMessage("discord_market_analysis")).append("**\n");
+        desc.append("▎ ").append(cm.getMessage("discord_total_positions").replace("%count%", String.valueOf(products.size()))).append("\n");
+        desc.append("────────────────────────\n\n");
+        
+        if (products.isEmpty()) {
+            desc.append("No items.");
         } else {
             for (Product p : products) {
-                desc.append("**").append(p.getName()).append("**: ")
-                    .append(p.getPrice()).append(currency).append("\n");
+                // Item Header - User's screenshot had a diamond or icon. We'll use a diamond bullet point.
+                // Or just the Name as the header.
+                desc.append("🔷 **").append(p.getName()).append("**\n");
+                
+                // Code block with prices
+                desc.append("```yaml\n");
+                String priceBlock = cm.getMessage("discord_price_block")
+                        .replace("%price%", String.valueOf(p.getPrice()))
+                        .replace("%currency%", currency);
+                desc.append(priceBlock).append("\n");
+                desc.append("```\n");
             }
         }
         
         embed.addProperty("description", desc.toString());
         
         JsonObject footer = new JsonObject();
-        footer.addProperty("text", "Updated at " + java.time.LocalDateTime.now().toString());
+        String footerText = cm.getMessage("discord_embed_footer").replace("%date%", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+        footer.addProperty("text", footerText);
+        // Icon for footer?
+        // footer.addProperty("icon_url", "...");
         embed.add("footer", footer);
         
         return embed;

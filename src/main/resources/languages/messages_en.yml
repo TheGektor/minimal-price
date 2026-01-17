@@ -14,3 +14,11 @@ error_generic: "<red>An error occurred.</red>"
 no_permission: "<red>You do not have permission.</red>"
 usage: "<red>Usage: /minimal <subcommand></red>"
 reload_success: "<green>Configuration reloaded!</green>"
+
+# Discord Embed
+discord_embed_footer: "MinimalPrice Market System • %date%"
+discord_market_analysis: "📊 Market Analysis"
+discord_total_positions: "Total positions: %count%"
+discord_item_qty: "🔷 Qty: 1 pc."
+discord_price_block: "Price: %price% %currency%"
+discord_rec_price: "🔥 Rec. price:"
