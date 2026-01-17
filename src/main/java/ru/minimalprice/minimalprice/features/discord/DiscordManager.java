@@ -3,8 +3,8 @@ package ru.minimalprice.minimalprice.features.discord;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -32,7 +32,7 @@ public class DiscordManager implements Listener {
         this.plugin = plugin;
         this.priceManager = priceManager;
         this.repository = new DiscordRepository(databasePath);
-        // Using same config key, treating it as TextChannel
+        // Fallback: Use the configured ID as a TextChannel ID
         this.channelId = plugin.getConfig().getString("discord_forum_channel_id");
 
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -75,18 +75,22 @@ public class DiscordManager implements Listener {
 
                 TextChannel channel = DiscordSRV.getPlugin().getJda().getTextChannelById(channelId);
                 if (channel == null) {
-                    plugin.getLogger().warning("Discord Channel ID " + channelId + " not found!");
+                    plugin.getLogger().warning("Discord Channel ID " + channelId + " not found or not a TextChannel!");
                     return;
                 }
 
                 MessageEmbed embed = buildEmbed(categoryName, List.of());
+                
+                // JDA 4 sendMessage returns a RestAction<Message>
                 channel.sendMessage(embed).queue(message -> {
                     try {
-                        // We use channelId as "threadId" since we aren't using threads
+                        // Store message ID. We use channelId as "threadId" just to keep DB schema compatible if we switch later
                         repository.saveSyncData(categoryName, channelId, message.getId());
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
+                }, error -> {
+                     plugin.getLogger().warning("Failed to send message for " + categoryName + ": " + error.getMessage());
                 });
 
             } catch (Exception e) {
@@ -109,8 +113,12 @@ public class DiscordManager implements Listener {
                 
                 TextChannel channel = DiscordSRV.getPlugin().getJda().getTextChannelById(syncData.threadId);
                 if (channel == null) {
-                    // Channel lost?
-                    return;
+                    // Try the main configured channel if stored one is missing/wrong
+                    channel = DiscordSRV.getPlugin().getJda().getTextChannelById(channelId);
+                }
+                
+                if (channel == null) {
+                     return;
                 }
 
                 List<Product> products = null;
@@ -123,7 +131,17 @@ public class DiscordManager implements Listener {
                 if (products == null) return;
 
                 MessageEmbed embed = buildEmbed(categoryName, products);
-                channel.editMessageById(syncData.messageId, embed).queue();
+                channel.editMessageById(syncData.messageId, embed).queue(null, error -> {
+                    // If message deleted, recreate
+                    if (error.getMessage().contains("Unknown Message")) {
+                        try {
+                            repository.deleteSyncData(categoryName);
+                            createMessageForCategory(categoryName);
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -139,11 +157,9 @@ public class DiscordManager implements Listener {
                 DiscordRepository.SyncData syncData = repository.getSyncData(oldName);
                 if (syncData == null) return;
                 
-                // Update DB
                 repository.deleteSyncData(oldName);
                 repository.saveSyncData(newName, syncData.threadId, syncData.messageId);
                 
-                // Update embed content with new name
                 updateCategoryMessage(newName);
                 
              } catch (Exception e) {
@@ -170,6 +186,7 @@ public class DiscordManager implements Listener {
         }
         
         builder.setDescription(desc.toString());
+        // JDA 4.x compatible footer
         builder.setFooter("Updated at " + java.time.LocalDateTime.now().toString(), null);
         
         return builder.build();

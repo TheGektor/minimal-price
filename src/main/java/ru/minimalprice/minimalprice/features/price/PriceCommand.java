@@ -142,7 +142,7 @@ public class PriceCommand implements CommandExecutor {
              return;
         }
         String catName = args[2];
-        String itemName = args[3];
+        String itemName = args[3].replace('_', ' ');
         double price;
         try {
             price = Double.parseDouble(args[4]);
