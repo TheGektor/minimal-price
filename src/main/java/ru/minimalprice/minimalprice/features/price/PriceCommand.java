@@ -65,6 +65,9 @@ public class PriceCommand implements CommandExecutor {
             case "set":
                 handleSet(sender, args);
                 break;
+            case "reload":
+                handleReload(sender);
+                break;
             default:
                 sender.sendMessage(configManager.getMessage("usage"));
         }
@@ -185,5 +188,10 @@ public class PriceCommand implements CommandExecutor {
         } else {
              sender.sendMessage(configManager.getMessage("usage"));
         }
+    }
+
+    private void handleReload(CommandSender sender) {
+        configManager.reload();
+        sender.sendMessage(configManager.getMessage("reload_success"));
     }
 }

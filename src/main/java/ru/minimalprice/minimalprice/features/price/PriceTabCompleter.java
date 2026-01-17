@@ -28,7 +28,7 @@ public class PriceTabCompleter implements TabCompleter {
 
         // /minimal [sub]
         if (args.length == 1) {
-            return filter(List.of("create", "add", "set"), args[0]);
+            return filter(List.of("create", "add", "set", "reload"), args[0]);
         }
         
         String sub = args[0].toLowerCase();

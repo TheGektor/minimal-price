@@ -13,3 +13,4 @@ rename_product_success: "<green>Товар переименован из <yellow
 error_generic: "<red>Произошла ошибка.</red>"
 no_permission: "<red>У вас нет прав.</red>"
 usage: "<red>Использование: /minimal <подкоманда></red>"
+reload_success: "<green>Конфигурация перезагружена!</green>"

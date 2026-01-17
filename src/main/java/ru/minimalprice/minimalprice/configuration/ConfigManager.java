@@ -79,4 +79,9 @@ public class ConfigManager {
     public String getRawMessage(String key) {
          return languageConfig.getString(key, "");
     }
+
+    public void reload() {
+        plugin.reloadConfig();
+        loadLocale();
+    }
 }
