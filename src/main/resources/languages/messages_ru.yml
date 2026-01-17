@@ -5,7 +5,7 @@ category_item: "<gray>»</gray> <gold><bold><click:run_command:'/minimal view %c
 category_view_header: "<gradient:#00FFAA:#00AAFF><bold>--- Категория: %category% ---</bold></gradient>"
 category_not_found: "<red>Категория не найдена.</red>"
 category_format: "<gold><bold>%category%</bold></gold>:"
-item_format: " <gray>-</gray> <gradient:#A0A0FF:#FFFFA0>%item%</gradient>: <green>%price%$</green>"
+item_format: " <gray>-</gray> <gradient:#A0A0FF:#FFFFA0>%item%</gradient>: <green>%price%%currency%</green>"
 create_category_success: "<green>Категория <yellow>%name%</yellow> создана!</green>"
 add_product_success: "<green>Товар <yellow>%item%</yellow> добавлен в <yellow>%category%</yellow> с ценой <green>%price%</green>!</green>"
 rename_category_success: "<green>Категория переименована из <yellow>%old%</yellow> в <yellow>%new%</yellow>!</green>"

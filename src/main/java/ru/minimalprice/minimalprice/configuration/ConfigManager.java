@@ -45,6 +45,10 @@ public class ConfigManager {
             }
         }
         
+        // Replace currency placeholder
+        String currency = plugin.getConfig().getString("currency", "$");
+        msg = msg.replace("%currency%", currency);
+        
         return miniMessage.deserialize(msg);
     }
     
@@ -59,6 +63,10 @@ public class ConfigManager {
                 msg = prefix + msg;
             }
         }
+        
+        // Replace currency placeholder
+        String currency = plugin.getConfig().getString("currency", "$");
+        msg = msg.replace("%currency%", currency);
         
         for (int i = 0; i < placeholders.length; i += 2) {
             if (i + 1 < placeholders.length) {
