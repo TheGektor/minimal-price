@@ -4,6 +4,7 @@ main: ru.minimalprice.minimalprice.MinimalPrice
 api-version: '1.21'
 authors: [ Antag0nis1 ]
 description: A minimal price management plugin.
+softdepend: [DiscordSRV]
 
 permissions:
   minimalprice.view:

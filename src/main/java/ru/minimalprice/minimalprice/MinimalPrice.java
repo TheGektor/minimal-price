@@ -49,6 +49,8 @@ public final class MinimalPrice extends JavaPlugin {
         if (getServer().getPluginManager().isPluginEnabled("DiscordSRV")) {
             this.discordManager = new ru.minimalprice.minimalprice.features.discord.DiscordManager(this, priceManager, getDataFolder().getAbsolutePath() + "/discord.db");
             getLogger().info("DiscordSRV integration enabled!");
+        } else {
+            getLogger().warning("DiscordSRV plugin not found or not enabled! Integration disabled.");
         }
 
         getLogger().info("MinimalPrice enabled!");

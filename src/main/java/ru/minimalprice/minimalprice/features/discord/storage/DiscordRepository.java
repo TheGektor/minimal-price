@@ -75,6 +75,20 @@ public class DiscordRepository {
         }
     }
     
+    public java.util.Map<String, SyncData> getAllSyncData() throws SQLException {
+        java.util.Map<String, SyncData> result = new java.util.HashMap<>();
+        String sql = "SELECT category_name, thread_id, message_id FROM discord_sync";
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                result.put(rs.getString("category_name"), 
+                    new SyncData(rs.getString("thread_id"), rs.getString("message_id")));
+            }
+        }
+        return result;
+    }
+    
     public void close() {
         if (dataSource != null) {
             dataSource.close();
