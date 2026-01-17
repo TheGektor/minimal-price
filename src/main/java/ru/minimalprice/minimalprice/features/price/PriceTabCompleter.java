@@ -1,17 +1,18 @@
 package ru.minimalprice.minimalprice.features.price;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import ru.minimalprice.minimalprice.features.price.models.Category;
 import ru.minimalprice.minimalprice.features.price.models.Product;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class PriceTabCompleter implements TabCompleter {
 

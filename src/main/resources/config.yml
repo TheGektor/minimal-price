@@ -1,7 +1,9 @@
 messages:
   prefix: "<gradient:#00FFAA:#00AAFF><bold>MinimalPrice</bold></gradient> <gray>»</gray> "
-  welcome_header: "<gradient:#FFD700:#FFA500><bold>--- Minimal Prices ---</bold></gradient>"
-  category_format: "<gold><bold>%category%</bold></gold>:"
+  category_list_header: "<gradient:#FFD700:#FFA500><bold>--- Categories (Click to View) ---</bold></gradient>"
+  category_item: "<gray>»</gray> <gold><bold><click:run_command:'/minimal view %category%'><hover:show_text:'<gray>Click to view items in %category%</gray>'>%category%</hover></click></bold></gold>"
+  category_view_header: "<gradient:#00FFAA:#00AAFF><bold>--- Category: %category% ---</bold></gradient>"
+  category_not_found: "<red>Category not found.</red>"
   item_format: " <gray>-</gray> <gradient:#A0A0FF:#FFFFA0>%item%</gradient>: <green>%price%$</green>"
   create_category_success: "<green>Category <yellow>%name%</yellow> created!</green>"
   add_product_success: "<green>Product <yellow>%item%</yellow> added to <yellow>%category%</yellow> with price <green>%price%</green>!</green>"
