@@ -1,6 +1,10 @@
 # MinimalPrice
 
-MinimalPrice - это плагин для Minecraft серверов (Paper/Spigot), предназначенный для управления минимальными ценами на товары, с организацией по категориям. Особенностью плагина является мощная интеграция с Discord, которая синхронизирует списки цен в Forum Channel в реальном времени.
+**MinimalPrice** — это передовое и надежное решение для управления экономикой на современных серверах Minecraft. В условиях постоянно развивающихся игровых экономик, администраторам критически важно иметь инструменты для предотвращения демпинга и обесценивания ресурсов. Наш плагин предоставляет эти административные возможности в удобном формате.
+
+Вы сможете легко категоризировать товары, устанавливать жесткие минимальные пороги цен и управлять всем этим через удобный графический интерфейс прямо в игровом чате. Больше никаких сложных команд для рядовых игроков — только интуитивно понятные кликабельные меню.
+
+Однако настоящей "киллер-фичей" является наша **глубокая интеграция с Discord**. В отличие от простых ботов, MinimalPrice использует возможности Discord Forum Channels на полную мощность. Плагин автоматически создает отдельные ветки обсуждений для каждой категории товаров, публикует красиво оформленные списки цен и, что самое главное, синхронизирует любые изменения в игре в реальном времени. Если вы меняете цену на алмаз в игре, она мгновенно обновляется в Discord, гарантируя, что ваши игроки всегда имеют доступ к актуальной информации, даже находясь оффлайн. Мы позаботились и о технических деталях: защита от спама, обход ограничений (Rate Limits) Discord API и автоматическая очистка устаревших данных делают работу плагина абсолютно прозрачной и стабильной.
 
 ## ✨ Возможности
 
@@ -125,7 +129,11 @@ discord_forum_channel_id: "123456789012345678"
 
 # MinimalPrice (English Version)
 
-MinimalPrice is a Minecraft server plugin (Paper/Spigot) designed to manage minimum item prices organized by categories. A key feature is its powerful Discord integration, which syncs price lists to a Forum Channel in real-time.
+**MinimalPrice** is an advanced and reliable solution for economy management on modern Minecraft servers. In the context of constantly evolving in-game economies, it is critical for administrators to have tools to prevent dumping and resource devaluation. Our plugin provides these administrative capabilities in a convenient format.
+
+You can easily categorize items, set strict minimum price thresholds, and manage everything through a user-friendly GUI directly in the game chat. No more complex commands for regular players — just intuitive clickable menus.
+
+However, the real "killer feature" is our **deep integration with Discord**. Unlike simple bots, MinimalPrice leverages the full power of Discord Forum Channels. The plugin automatically creates separate discussion threads for each item category, publishes beautifully formatted price lists, and, most importantly, synchronizes any in-game changes in real-time. If you change the price of a diamond in-game, it instantly updates in Discord, ensuring your players always have access to up-to-date information, even when offline. We've also taken care of the technical details: spam protection, Discord API Rate Limit handling, and automatic cleanup of outdated data make the plugin's operation completely transparent and stable.
 
 ## ✨ Features
 
