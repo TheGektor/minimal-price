@@ -1,0 +1,40 @@
+name: MinimalPrice
+version: '@version@'
+main: ru.minimalprice.minimalprice.MinimalPrice
+api-version: '1.21'
+authors: [ Antag0nis1 ]
+description: A minimal price management plugin.
+
+permissions:
+  minimalprice.view:
+    description: Allows viewing the price list.
+    default: op
+  minimalprice.edit:
+    description: Allows editing the price list.
+    default: op
+
+commands:
+  minimal:
+    description: Main command for MinimalPrice.
+    usage: /minimal <subcommand>
+    permission: minimalprice.view
+    aliases:
+      - mp
+  price:
+    description: Alias for viewing prices.
+    usage: /price
+    permission: minimalprice.view
+
+# Default Configuration
+messages:
+    prefix: "<gradient:#00FFAA:#00AAFF><bold>MinimalPrice</bold></gradient> <gray>»</gray> "
+    welcome_header: "<gradient:#FFD700:#FFA500><bold>--- Minimal Prices ---</bold></gradient>"
+    category_format: "<gold><bold>%category%</bold></gold>:"
+    item_format: " <gray>-</gray> <gradient:#A0A0FF:#FFFFA0>%item%</gradient>: <green>%price%$</green>"
+    create_category_success: "<green>Category <yellow>%name%</yellow> created!</green>"
+    add_product_success: "<green>Product <yellow>%item%</yellow> added to <yellow>%category%</yellow> with price <green>%price%</green>!</green>"
+    rename_category_success: "<green>Category renamed from <yellow>%old%</yellow> to <yellow>%new%</yellow>!</green>"
+    rename_product_success: "<green>Product renamed from <yellow>%old%</yellow> to <yellow>%new%</yellow>!</green>"
+    error_generic: "<red>An error occurred.</red>"
+    no_permission: "<red>You do not have permission.</red>"
+    usage: "<red>Usage: /minimal <subcommand></red>"

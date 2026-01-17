@@ -1,0 +1,15 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven {
+            name = "papermc-repo"
+            url = "https://repo.papermc.io/repository/maven-public/"
+        }
+        maven {
+            name = "papermc-plugins"
+            url = "https://repo.papermc.io/repository/gradle-plugin-development/"
+        }
+    }
+}
+
+rootProject.name = 'minimal-price'
