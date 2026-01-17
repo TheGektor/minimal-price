@@ -1,11 +1,11 @@
 package ru.minimalprice.minimalprice.database;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class DatabaseManager {
 
@@ -29,21 +29,25 @@ public class DatabaseManager {
     private void createTables() {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
-            
-            // Categories table
-            stmt.execute("CREATE TABLE IF NOT EXISTS mp_categories (" +
-                    "name VARCHAR(255) PRIMARY KEY" +
-                    ");");
 
-            // Items table
-            // We use category_name as FK. If name changes, we need to update items. 
-            // Or use an ID. Plan said ID, but user commands use names.
-            // Using Name as PK for simplicity with commands, or ID? 
-            // Requests: /minimal create kategori [name] -> Name is unique key naturally.
-            // /minimal set kategori [old] [new] -> UPDATE mp_categories SET name=new WHERE name=old; + Cascade or manual update.
-            // Let's stick to Name as PK for Category to simplify lookup, or ID and a Unique Index on Name.
-            // Let's use ID for stability, Name for display/lookup.
+            // Dropping tables to ensure schema is updated.
+            // WARNING: This deletes data on every restart if not handled carefully.
+            // But since we are in dev and schema is broken, let's just make sure we have the right tables.
+            // For production plugin, we should use migration or check columns.
+            // However, the error suggests table exists but column missing.
+            // To fix it now without wiping, we can use try-catch or just wipe it once.
+            // Given "minimal-price" dev status, I will wipe it once or just alter.
             
+            // Actually, best approach for dev: Drop if exists to fix schema.
+            // User just started server, no critical data.
+            // stmt.execute("DROP TABLE IF EXISTS mp_items");
+            // stmt.execute("DROP TABLE IF EXISTS mp_categories");
+            
+            // Wait, if I drop every time, data is lost.
+            // I should check if column exists or just run this once.
+            // But I cannot run SQL manually easily.
+            // I'll add the check for now.
+             
             stmt.execute("CREATE TABLE IF NOT EXISTS mp_categories (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "name VARCHAR(255) NOT NULL UNIQUE" +

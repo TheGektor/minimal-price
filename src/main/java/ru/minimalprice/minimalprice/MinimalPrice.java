@@ -1,7 +1,7 @@
 package ru.minimalprice.minimalprice;
 
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.plugin.java.JavaPlugin;
+
 import ru.minimalprice.minimalprice.configuration.ConfigManager;
 import ru.minimalprice.minimalprice.database.DatabaseManager;
 import ru.minimalprice.minimalprice.features.price.PriceCommand;
@@ -22,7 +22,7 @@ public final class MinimalPrice extends JavaPlugin {
         this.configManager = new ConfigManager(this);
 
         // 2. Database
-        this.databaseManager = new DatabaseManager(getDataFolder().getAbsolutePath() + "/database.db");
+        this.databaseManager = new DatabaseManager(getDataFolder().getAbsolutePath() + "/database_v2.db");
         this.databaseManager.initDatabase();
 
         // 3. Features
