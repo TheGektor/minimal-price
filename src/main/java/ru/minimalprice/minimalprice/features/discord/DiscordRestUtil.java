@@ -46,6 +46,25 @@ public class DiscordRestUtil {
         this.gson = new Gson();
     }
 
+    private CompletableFuture<HttpResponse<String>> sendRequestWithRetry(HttpRequest request) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenCompose(response -> {
+                    if (response.statusCode() == 429) {
+                        // Rate limit hit
+                        JsonObject json = gson.fromJson(response.body(), JsonObject.class);
+                        double retryAfter = json.has("retry_after") ? json.get("retry_after").getAsDouble() : 1.0;
+                        long delayMs = (long) (retryAfter * 1000) + 100; // Add buffer
+                        
+                        plugin.getLogger().warning("Discord Rate Limit hit! Retrying in " + delayMs + "ms...");
+                        
+                        return CompletableFuture.runAsync(() -> {}, 
+                                CompletableFuture.delayedExecutor(delayMs, java.util.concurrent.TimeUnit.MILLISECONDS))
+                                .thenCompose(v -> sendRequestWithRetry(request));
+                    }
+                    return CompletableFuture.completedFuture(response);
+                });
+    }
+
     public CompletableFuture<ThreadResult> createForumPost(String channelId, String title, String content, JsonObject embed) {
         String url = "https://discord.com/api/v10/channels/" + channelId + "/threads";
 
@@ -69,7 +88,7 @@ public class DiscordRestUtil {
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(body), StandardCharsets.UTF_8))
                 .build();
 
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        return sendRequestWithRetry(request)
                 .thenApply(this::parseThreadCreationResponse);
     }
 
@@ -82,7 +101,7 @@ public class DiscordRestUtil {
                 .DELETE()
                 .build();
 
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        return sendRequestWithRetry(request)
                 .thenAccept(response -> {
                     if (response.statusCode() != 204 && response.statusCode() != 200) {
                         plugin.getLogger().warning("Failed to delete channel " + channelId + ": " + response.body());
@@ -107,7 +126,7 @@ public class DiscordRestUtil {
                 .method("PATCH", HttpRequest.BodyPublishers.ofString(gson.toJson(body), StandardCharsets.UTF_8))
                 .build();
 
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        return sendRequestWithRetry(request)
                  .thenAccept(response -> {
                     if (response.statusCode() != 200) {
                         plugin.getLogger().warning("Failed to update message " + messageId + ": " + response.body());
@@ -128,7 +147,7 @@ public class DiscordRestUtil {
                 .method("PATCH", HttpRequest.BodyPublishers.ofString(gson.toJson(body), StandardCharsets.UTF_8))
                 .build();
                 
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        return sendRequestWithRetry(request)
                  .thenAccept(response -> {
                     if (response.statusCode() != 200) {
                          plugin.getLogger().warning("Failed to update thread name " + channelId + ": " + response.body());

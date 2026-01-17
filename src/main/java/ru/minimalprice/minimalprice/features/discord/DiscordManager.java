@@ -43,16 +43,23 @@ public class DiscordManager implements Listener {
     }
     
     private boolean initialized = false;
+    private final java.util.concurrent.atomic.AtomicBoolean initializing = new java.util.concurrent.atomic.AtomicBoolean(false);
 
     private void checkReadyAndInit() {
          Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task -> {
-             if (initialized) {
+             if (initialized || initializing.get()) {
                  task.cancel();
                  return;
              }
              
              if (isDiscordReady()) {
+                 if (!initializing.compareAndSet(false, true)) {
+                     task.cancel();
+                     return;
+                 }
+                 
                  plugin.getLogger().info("DiscordSRV is ready! Waiting for PriceManager...");
+                 task.cancel(); // Cancel immediately to prevent future ticks
                  
                  // Wait for PriceManager to load data
                  priceManager.getInitFuture().thenRun(() -> {
@@ -60,11 +67,8 @@ public class DiscordManager implements Listener {
                      restUtil = new DiscordRestUtil(plugin);
                      performStartupCleanup();
                      initialized = true;
+                     initializing.set(false); // Reset just in case, though initialized=true prevents re-entry
                  });
-                 
-                 task.cancel();
-             } else {
-                 // plugin.getLogger().info("DiscordSRV not ready yet...");
              }
          }, 100L, 60L);
     }
@@ -90,7 +94,10 @@ public class DiscordManager implements Listener {
             }
             
             // 3. Create new forum posts/threads
-            for (ru.minimalprice.minimalprice.features.price.models.Category cat : priceManager.getCategories()) {
+            List<ru.minimalprice.minimalprice.features.price.models.Category> categories = priceManager.getCategories();
+            plugin.getLogger().info("Found " + categories.size() + " categories to sync.");
+            
+            for (ru.minimalprice.minimalprice.features.price.models.Category cat : categories) {
                 createForumPostForCategory(cat.getName());
                 try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
             }
@@ -140,7 +147,25 @@ public class DiscordManager implements Listener {
             try {
                 if (repository.getSyncData(categoryName) != null) return;
 
-                JsonObject embed = buildEmbed(categoryName, List.of());
+                // Find Category ID to get products
+                int categoryId = -1;
+                for (ru.minimalprice.minimalprice.features.price.models.Category cat : priceManager.getCategories()) {
+                    if (cat.getName().equals(categoryName)) {
+                        categoryId = cat.getId();
+                        break;
+                    }
+                }
+                
+                List<Product> products = (categoryId != -1) ? priceManager.getProducts(categoryId) : List.of();
+                
+                // Logging for debug
+                if (products.isEmpty()) {
+                    plugin.getLogger().warning("Creating post for category '" + categoryName + "' but no products found (ID: " + categoryId + ")");
+                } else {
+                    plugin.getLogger().info("Creating post for category '" + categoryName + "' with " + products.size() + " products.");
+                }
+
+                JsonObject embed = buildEmbed(categoryName, products);
                 
                 restUtil.createForumPost(forumChannelId, categoryName, "", embed)
                     .thenAccept(result -> {
