@@ -12,6 +12,10 @@ public class DatabaseManager {
     private final String url;
     private HikariDataSource dataSource;
 
+    public HikariDataSource getDataSource() {
+        return dataSource;
+    }
+
     public DatabaseManager(String path) {
         this.url = "jdbc:sqlite:" + path;
     }

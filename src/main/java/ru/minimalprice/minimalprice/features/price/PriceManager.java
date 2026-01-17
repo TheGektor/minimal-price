@@ -57,6 +57,7 @@ public class PriceManager {
             try {
                 repository.createCategory(name);
                 reloadCache();
+                org.bukkit.Bukkit.getPluginManager().callEvent(new ru.minimalprice.minimalprice.features.price.events.CategoryCreateEvent(name));
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -68,6 +69,7 @@ public class PriceManager {
             try {
                 repository.upsertProduct(category, product, price);
                 reloadCache();
+                 org.bukkit.Bukkit.getPluginManager().callEvent(new ru.minimalprice.minimalprice.features.price.events.ProductUpdateEvent(category, product, price));
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -79,6 +81,7 @@ public class PriceManager {
             try {
                 repository.renameCategory(oldName, newName);
                 reloadCache();
+                org.bukkit.Bukkit.getPluginManager().callEvent(new ru.minimalprice.minimalprice.features.price.events.CategoryRenameEvent(oldName, newName));
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -90,6 +93,9 @@ public class PriceManager {
             try {
                 int count = repository.renameProduct(oldName, newName);
                 reloadCache();
+                if (count > 0) {
+                     org.bukkit.Bukkit.getPluginManager().callEvent(new ru.minimalprice.minimalprice.features.price.events.ProductRenameEvent(oldName, newName));
+                }
                 return count;
             } catch (SQLException e) {
                 throw new RuntimeException(e);

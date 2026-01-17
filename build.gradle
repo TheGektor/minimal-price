@@ -18,11 +18,16 @@ repositories {
         name = 'sonatype'
         url = 'https://oss.sonatype.org/content/groups/public/'
     }
+    maven {
+        name = "scarsz"
+        url = "https://nexus.scarsz.me/content/groups/public/"
+    }
 }
 
 dependencies {
     paperweight.paperDevBundle('1.21.1-R0.1-SNAPSHOT')
     implementation 'com.zaxxer:HikariCP:5.1.0'
+    compileOnly "com.discordsrv:discordsrv:1.29.0"
 }
 
 def targetJavaVersion = 21
