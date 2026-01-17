@@ -19,29 +19,39 @@ public class PriceManager {
     // Cache: Category -> List of Products
     private final List<Category> categoriesCache = new CopyOnWriteArrayList<>();
     private final Map<Integer, List<Product>> productsCache = new ConcurrentHashMap<>();
+    private final CompletableFuture<Void> initFuture = new CompletableFuture<>();
 
     public PriceManager(PriceRepository repository) {
         this.repository = repository;
-        reloadCache();
+        reloadCache().thenRun(() -> initFuture.complete(null));
     }
 
-    public void reloadCache() {
-        CompletableFuture.runAsync(() -> {
+    public CompletableFuture<Void> reloadCache() {
+        return CompletableFuture.runAsync(() -> {
             try {
-                categoriesCache.clear();
-                productsCache.clear();
+                // Temporary lists to avoid clearing main cache if error occurs
+                List<Category> tempCats = repository.getAllCategories();
+                Map<Integer, List<Product>> tempProds = new ConcurrentHashMap<>();
                 
-                List<Category> cats = repository.getAllCategories();
-                categoriesCache.addAll(cats);
-                
-                for (Category cat : cats) {
+                for (Category cat : tempCats) {
                     List<Product> prods = repository.getProductsByCategory(cat.getId());
-                    productsCache.put(cat.getId(), prods);
+                    tempProds.put(cat.getId(), prods);
                 }
+                
+                // Update main cache atomically-ish
+                categoriesCache.clear();
+                categoriesCache.addAll(tempCats);
+                productsCache.clear();
+                productsCache.putAll(tempProds);
+                
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         });
+    }
+
+    public CompletableFuture<Void> getInitFuture() {
+        return initFuture;
     }
 
     public List<Category> getCategories() {

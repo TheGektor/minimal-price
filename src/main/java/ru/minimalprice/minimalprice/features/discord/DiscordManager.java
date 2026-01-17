@@ -52,10 +52,16 @@ public class DiscordManager implements Listener {
              }
              
              if (isDiscordReady()) {
-                 initialized = true;
-                 plugin.getLogger().info("DiscordSRV is ready! Initializing DiscordRestUtil...");
-                 restUtil = new DiscordRestUtil(plugin);
-                 performStartupCleanup();
+                 plugin.getLogger().info("DiscordSRV is ready! Waiting for PriceManager...");
+                 
+                 // Wait for PriceManager to load data
+                 priceManager.getInitFuture().thenRun(() -> {
+                     plugin.getLogger().info("PriceManager ready! Initializing DiscordRestUtil...");
+                     restUtil = new DiscordRestUtil(plugin);
+                     performStartupCleanup();
+                     initialized = true;
+                 });
+                 
                  task.cancel();
              } else {
                  // plugin.getLogger().info("DiscordSRV not ready yet...");
@@ -226,17 +232,16 @@ public class DiscordManager implements Listener {
             desc.append("No items.");
         } else {
             for (Product p : products) {
-                // Item Header - User's screenshot had a diamond or icon. We'll use a diamond bullet point.
-                // Or just the Name as the header.
-                desc.append("🔷 **").append(p.getName()).append("**\n");
+                // Item Header using Discord Markdown Header (###)
+                // Using invisible character for spacing if needed, or just standard markdown.
+                desc.append("### ").append(p.getName()).append("\n");
                 
-                // Code block with prices
-                desc.append("```yaml\n");
-                String priceBlock = cm.getRawMessage("discord_price_block")
+                // Simple Price Line
+                String priceLine = cm.getRawMessage("discord_price_block")
                         .replace("%price%", String.valueOf(p.getPrice()))
                         .replace("%currency%", currency);
-                desc.append(priceBlock).append("\n");
-                desc.append("```\n");
+                
+                desc.append(priceLine).append("\n\n");
             }
         }
         
