@@ -1,0 +1,4 @@
+# MinimalPrice Configuration
+locale: en
+currency: '$'
+discord_forum_channel_id: "000000000000000000"

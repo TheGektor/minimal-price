@@ -1,0 +1,28 @@
+name: MinimalPrice
+version: '@version@'
+main: ru.minimalprice.minimalprice.MinimalPrice
+api-version: '1.21'
+authors: [ Antag0nis1 ]
+description: A minimal price management plugin.
+softdepend: [DiscordSRV]
+
+permissions:
+  minimalprice.view:
+    description: Allows viewing the price list.
+    default: op
+  minimalprice.edit:
+    description: Allows editing the price list.
+    default: op
+
+commands:
+  minimal:
+    description: Main command for MinimalPrice.
+    usage: /minimal <subcommand>
+    permission: minimalprice.view
+    aliases:
+      - mp
+  price:
+    description: Alias for viewing prices.
+    usage: /price
+    permission: minimalprice.view
+

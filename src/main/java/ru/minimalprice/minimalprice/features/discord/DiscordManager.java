@@ -1,10 +1,16 @@
 package ru.minimalprice.minimalprice.features.discord;
 
-import com.google.gson.JsonObject;
-import github.scarsz.discordsrv.DiscordSRV;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+
+import com.google.gson.JsonObject;
+
+import github.scarsz.discordsrv.DiscordSRV;
 import ru.minimalprice.minimalprice.MinimalPrice;
 import ru.minimalprice.minimalprice.features.discord.storage.DiscordRepository;
 import ru.minimalprice.minimalprice.features.price.PriceManager;
@@ -13,10 +19,6 @@ import ru.minimalprice.minimalprice.features.price.events.CategoryRenameEvent;
 import ru.minimalprice.minimalprice.features.price.events.ProductRenameEvent;
 import ru.minimalprice.minimalprice.features.price.events.ProductUpdateEvent;
 import ru.minimalprice.minimalprice.features.price.models.Product;
-
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
 
 public class DiscordManager implements Listener {
 
@@ -165,9 +167,10 @@ public class DiscordManager implements Listener {
                     plugin.getLogger().info("Creating post for category '" + categoryName + "' with " + products.size() + " products.");
                 }
 
-                JsonObject embed = buildEmbed(categoryName, products);
+                JsonObject embed = null; // No embed
+                com.google.gson.JsonArray components = buildComponents(categoryName, products);
                 
-                restUtil.createForumPost(forumChannelId, categoryName, "", embed)
+                restUtil.createForumPost(forumChannelId, categoryName, "", embed, components)
                     .thenAccept(result -> {
                         if (result != null) {
                             try {
@@ -204,8 +207,9 @@ public class DiscordManager implements Listener {
                 }
                 if (products == null) return;
 
-                JsonObject embed = buildEmbed(categoryName, products);
-                restUtil.updateMessage(syncData.threadId, syncData.messageId, embed);
+                JsonObject embed = null; // No embed
+                com.google.gson.JsonArray components = buildComponents(categoryName, products);
+                restUtil.updateMessage(syncData.threadId, syncData.messageId, embed, components);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -234,52 +238,119 @@ public class DiscordManager implements Listener {
          });
     }
 
-    private JsonObject buildEmbed(String categoryName, List<Product> products) {
-        JsonObject embed = new JsonObject();
+    private com.google.gson.JsonArray buildComponents(String categoryName, List<Product> products) {
+        // Root array
+        com.google.gson.JsonArray components = new com.google.gson.JsonArray();
         
-        // Title? User screenshot shows "Category Name" with icon. We don't have icons, just use Name.
-        embed.addProperty("title", "📦 " + categoryName);
-        embed.addProperty("color", 3447003); // Dark background-ish or specific color? User used dark grey in screenshot, side bar color?
-        // Screenshot side bar is blue-ish or custom. Let's use a nice Blue for "Market". 
-        // 0x3498db (3447003) is a nice blue.
+        // 1. Container Component (Type 17)
+        JsonObject container = new JsonObject();
+        container.addProperty("type", 17); // Container
+        container.addProperty("id", 1);    // Arbitrary ID
+        container.addProperty("accent_color", 15158332); // From user JSON hint (Red-ish) or 3447003 (Blue)
+        // Let's stick to user provided accent color for now or use the blue one if user wants branding.
+        // User provided 15158332 which is #E74C3C (Red).
+        // Let's use a nice branding color. 0x3498db (3447003) Blue.
+        container.addProperty("accent_color", 3447003); 
+        
+        com.google.gson.JsonArray innerComponents = new com.google.gson.JsonArray();
+        int componentIdCounter = 2; // Start ID counter
         
         ru.minimalprice.minimalprice.configuration.ConfigManager cm = new ru.minimalprice.minimalprice.configuration.ConfigManager(plugin);
         String currency = plugin.getConfig().getString("currency", "$");
+        String footerText = cm.getRawMessage("discord_embed_footer").replace("%date%", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+
+        // 2. Header Text (Type 10)
+        // # Category Name
+        JsonObject headerText = new JsonObject();
+        headerText.addProperty("type", 10);
+        headerText.addProperty("id", componentIdCounter++);
+        headerText.addProperty("content", "# " + categoryName);
+        innerComponents.add(headerText);
         
-        StringBuilder desc = new StringBuilder();
+        // 3. Separator (Type 14)
+        JsonObject sep1 = new JsonObject();
+        sep1.addProperty("type", 14);
+        sep1.addProperty("id", componentIdCounter++);
+        sep1.addProperty("divider", true);
+        sep1.addProperty("spacing", 2);
+        innerComponents.add(sep1);
         
-        // Header: Market Analysis
-        desc.append("**").append(cm.getRawMessage("discord_market_analysis")).append("**\n");
-        desc.append("▎ ").append(cm.getRawMessage("discord_total_positions").replace("%count%", String.valueOf(products.size()))).append("\n");
-        desc.append("────────────────────────\n\n");
+        // 4. Market Analysis Header (Type 10)
+        // ## Market Analysis \n **Analysis** \n Total: X
+        JsonObject analysisText = new JsonObject();
+        analysisText.addProperty("type", 10);
+        analysisText.addProperty("id", componentIdCounter++);
+        StringBuilder analysisContent = new StringBuilder();
+        analysisContent.append("## ").append(cm.getRawMessage("discord_market_analysis")).append("\n\n");
+        analysisContent.append("**").append(cm.getRawMessage("discord_total_positions").replace("%count%", String.valueOf(products.size()))).append("**");
+        analysisText.addProperty("content", analysisContent.toString());
+        innerComponents.add(analysisText);
         
+        // 5. Separator (Type 14)
+        JsonObject sep2 = new JsonObject();
+        sep2.addProperty("type", 14);
+        sep2.addProperty("id", componentIdCounter++);
+        sep2.addProperty("divider", true);
+        sep2.addProperty("spacing", 2);
+        innerComponents.add(sep2);
+        
+        // 6. Products
         if (products.isEmpty()) {
-            desc.append("No items.");
+             JsonObject emptyText = new JsonObject();
+             emptyText.addProperty("type", 10);
+             emptyText.addProperty("id", componentIdCounter++);
+             emptyText.addProperty("content", "No items.");
+             innerComponents.add(emptyText);
         } else {
+            // Discord has limits on components. 
+            // "Container" can hold sub-components. 
+            // We probably can't have infinite components.
+            // But let's add them as (Text -> Separator) pairs.
+            // NOTE: max components in a container? 
+            // User JSON shows flat list inside container.
+            
             for (Product p : products) {
-                // Item Header using Discord Markdown Header (###)
-                // Using invisible character for spacing if needed, or just standard markdown.
-                desc.append("### ").append(p.getName()).append("\n");
+                // Product Text (Type 10)
+                JsonObject productText = new JsonObject();
+                productText.addProperty("type", 10);
+                productText.addProperty("id", componentIdCounter++);
                 
-                // Simple Price Line
+                StringBuilder content = new StringBuilder();
+                content.append("**").append(p.getName()).append("**\n");
+                
                 String priceLine = cm.getRawMessage("discord_price_block")
                         .replace("%price%", String.valueOf(p.getPrice()))
                         .replace("%currency%", currency);
                 
-                desc.append(priceLine).append("\n\n");
+                // Assuming priceLine is like "Price: 20"
+                // User JSON has: "**Item**\n🟢 20.0 Cap\n🔴 20.0 Cap"
+                // Our config might just have the price.
+                content.append(priceLine);
+                
+                productText.addProperty("content", content.toString());
+                innerComponents.add(productText);
+                
+                // Separator (Type 14)
+                JsonObject productSep = new JsonObject();
+                productSep.addProperty("type", 14);
+                productSep.addProperty("id", componentIdCounter++);
+                productSep.addProperty("divider", true);
+                productSep.addProperty("spacing", 2);
+                innerComponents.add(productSep);
             }
         }
         
-        embed.addProperty("description", desc.toString());
+        // Footer (Type 10)
+        JsonObject footerObj = new JsonObject();
+        footerObj.addProperty("type", 10);
+        footerObj.addProperty("id", componentIdCounter++);
+        footerObj.addProperty("content", footerText);
+        innerComponents.add(footerObj);
         
-        JsonObject footer = new JsonObject();
-        String footerText = cm.getRawMessage("discord_embed_footer").replace("%date%", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
-        footer.addProperty("text", footerText);
-        // Icon for footer?
-        // footer.addProperty("icon_url", "...");
-        embed.add("footer", footer);
+        container.add("components", innerComponents);
+        components.add(container);
         
-        return embed;
+        return components;
     }
 
     private boolean isDiscordReady() {

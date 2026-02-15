@@ -1,17 +1,19 @@
 package ru.minimalprice.minimalprice.features.discord;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import github.scarsz.discordsrv.DiscordSRV;
-import org.bukkit.plugin.java.JavaPlugin;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
+
+import org.bukkit.plugin.java.JavaPlugin;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
+import github.scarsz.discordsrv.DiscordSRV;
 
 public class DiscordRestUtil {
 
@@ -65,7 +67,7 @@ public class DiscordRestUtil {
                 });
     }
 
-    public CompletableFuture<ThreadResult> createForumPost(String channelId, String title, String content, JsonObject embed) {
+    public CompletableFuture<ThreadResult> createForumPost(String channelId, String title, String content, JsonObject embed, JsonArray components) {
         String url = "https://discord.com/api/v10/channels/" + channelId + "/threads";
 
         JsonObject body = new JsonObject();
@@ -77,6 +79,11 @@ public class DiscordRestUtil {
             JsonArray embeds = new JsonArray();
             embeds.add(embed);
             message.add("embeds", embeds);
+        }
+        if (components != null) {
+            message.add("components", components);
+            // IS_COMPONENTS_V2 flag = 1 << 15 = 32768
+            message.addProperty("flags", 32768); 
         }
         
         body.add("message", message);
@@ -109,7 +116,7 @@ public class DiscordRestUtil {
                 });
     }
     
-    public CompletableFuture<Void> updateMessage(String channelId, String messageId, JsonObject embed) {
+    public CompletableFuture<Void> updateMessage(String channelId, String messageId, JsonObject embed, JsonArray components) {
         String url = "https://discord.com/api/v10/channels/" + channelId + "/messages/" + messageId;
 
         JsonObject body = new JsonObject();
@@ -117,6 +124,10 @@ public class DiscordRestUtil {
             JsonArray embeds = new JsonArray();
             embeds.add(embed);
             body.add("embeds", embeds);
+        }
+        if (components != null) {
+            body.add("components", components);
+            body.addProperty("flags", 32768); // IS_COMPONENTS_V2
         }
 
         HttpRequest request = HttpRequest.newBuilder()
