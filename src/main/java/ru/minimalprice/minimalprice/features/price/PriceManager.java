@@ -112,4 +112,46 @@ public class PriceManager {
             }
         });
     }
+
+    public CompletableFuture<Integer> deleteCategory(String name) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                int count = repository.deleteCategory(name);
+                if (count > 0) {
+                    reloadCache();
+                    org.bukkit.Bukkit.getPluginManager().callEvent(
+                        new ru.minimalprice.minimalprice.features.price.events.CategoryDeleteEvent(name));
+                }
+                return count;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public CompletableFuture<Integer> deleteProduct(String categoryName, String productName) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                int count = repository.deleteProduct(categoryName, productName);
+                if (count > 0) {
+                    reloadCache();
+                    org.bukkit.Bukkit.getPluginManager().callEvent(
+                        new ru.minimalprice.minimalprice.features.price.events.ProductDeleteEvent(categoryName, productName));
+                }
+                return count;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    /** Returns the total count of all products across all categories. */
+    public int getTotalProductCount() {
+        return productsCache.values().stream().mapToInt(List::size).sum();
+    }
+
+    public void close() {
+        // Nothing to close on this side; DatabaseManager handles the pool.
+        // Kept for symmetry and future use.
+    }
 }

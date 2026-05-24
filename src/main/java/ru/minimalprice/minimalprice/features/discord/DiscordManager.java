@@ -12,9 +12,11 @@ import com.google.gson.JsonObject;
 
 import github.scarsz.discordsrv.DiscordSRV;
 import ru.minimalprice.minimalprice.MinimalPrice;
+import ru.minimalprice.minimalprice.configuration.ConfigManager;
 import ru.minimalprice.minimalprice.features.discord.storage.DiscordRepository;
 import ru.minimalprice.minimalprice.features.price.PriceManager;
 import ru.minimalprice.minimalprice.features.price.events.CategoryCreateEvent;
+import ru.minimalprice.minimalprice.features.price.events.CategoryDeleteEvent;
 import ru.minimalprice.minimalprice.features.price.events.CategoryRenameEvent;
 import ru.minimalprice.minimalprice.features.price.events.ProductRenameEvent;
 import ru.minimalprice.minimalprice.features.price.events.ProductUpdateEvent;
@@ -25,12 +27,14 @@ public class DiscordManager implements Listener {
     private final MinimalPrice plugin;
     private final DiscordRepository repository;
     private final PriceManager priceManager;
+    private final ConfigManager configManager;
     private final String forumChannelId;
     private DiscordRestUtil restUtil;
 
-    public DiscordManager(MinimalPrice plugin, PriceManager priceManager, String databasePath) {
+    public DiscordManager(MinimalPrice plugin, PriceManager priceManager, ConfigManager configManager, String databasePath) {
         this.plugin = plugin;
         this.priceManager = priceManager;
+        this.configManager = configManager;
         this.repository = new DiscordRepository(databasePath);
         this.forumChannelId = plugin.getConfig().getString("discord_forum_channel_id");
 
@@ -131,11 +135,13 @@ public class DiscordManager implements Listener {
     }
 
     @EventHandler
+    public void onCategoryDelete(CategoryDeleteEvent event) {
+        deleteCategoryPost(event.getCategoryName());
+    }
+
+    @EventHandler
     public void onProductRename(ProductRenameEvent event) {
         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-             // Rebuild all? OR just find related.
-             // Simplest: update all for safety or just specific one if we knew mapping.
-             // We'll iterate all.
             for (ru.minimalprice.minimalprice.features.price.models.Category cat : priceManager.getCategories()) {
                 updateCategoryPost(cat.getName());
             }
@@ -238,6 +244,24 @@ public class DiscordManager implements Listener {
          });
     }
 
+    private void deleteCategoryPost(String categoryName) {
+        if (!isDiscordReady() || restUtil == null) return;
+
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                DiscordRepository.SyncData syncData = repository.getSyncData(categoryName);
+                if (syncData == null) return;
+
+                restUtil.deleteChannel(syncData.threadId);
+                repository.deleteSyncData(categoryName);
+                plugin.getLogger().info("Deleted Discord thread for category: " + categoryName);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     private com.google.gson.JsonArray buildComponents(String categoryName, List<Product> products) {
         // Root array
         com.google.gson.JsonArray components = new com.google.gson.JsonArray();
@@ -255,9 +279,8 @@ public class DiscordManager implements Listener {
         com.google.gson.JsonArray innerComponents = new com.google.gson.JsonArray();
         int componentIdCounter = 2; // Start ID counter
         
-        ru.minimalprice.minimalprice.configuration.ConfigManager cm = new ru.minimalprice.minimalprice.configuration.ConfigManager(plugin);
         String currency = plugin.getConfig().getString("currency", "$");
-        String footerText = cm.getRawMessage("discord_embed_footer").replace("%date%", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+        String footerText = configManager.getRawMessage("discord_embed_footer").replace("%date%", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
 
         // 2. Header Text (Type 10)
         // # Category Name
@@ -281,8 +304,8 @@ public class DiscordManager implements Listener {
         analysisText.addProperty("type", 10);
         analysisText.addProperty("id", componentIdCounter++);
         StringBuilder analysisContent = new StringBuilder();
-        analysisContent.append("## ").append(cm.getRawMessage("discord_market_analysis")).append("\n\n");
-        analysisContent.append("**").append(cm.getRawMessage("discord_total_positions").replace("%count%", String.valueOf(products.size()))).append("**");
+        analysisContent.append("## ").append(configManager.getRawMessage("discord_market_analysis")).append("\n\n");
+        analysisContent.append("**").append(configManager.getRawMessage("discord_total_positions").replace("%count%", String.valueOf(products.size()))).append("**");
         analysisText.addProperty("content", analysisContent.toString());
         innerComponents.add(analysisText);
         
@@ -318,7 +341,7 @@ public class DiscordManager implements Listener {
                 StringBuilder content = new StringBuilder();
                 content.append("**").append(p.getName()).append("**\n");
                 
-                String priceLine = cm.getRawMessage("discord_price_block")
+                String priceLine = configManager.getRawMessage("discord_price_block")
                         .replace("%price%", String.valueOf(p.getPrice()))
                         .replace("%currency%", currency);
                 

@@ -175,27 +175,19 @@ public class DiscordRestUtil {
         JsonObject json = gson.fromJson(response.body(), JsonObject.class);
         String threadId = json.get("id").getAsString();
         
-        // In a forum post response, the 'message' object might be nested or we might need to fetch it.
-        // Actually, for "Start Thread in Forum Channel", the response IS the Thread channel object.
-        // But the message ID is usually the same as the thread ID for the starter message in some contexts, 
-        // OR it's inside a 'message' field in the response?
-        // Checking Discord API docs: POST /channels/{id}/threads (in forum) returns the thread channel object.
-        // It DOES NOT return the message object directly in the root. 
-        // BUT, usually the starter message ID = thread ID in some views, but better check.
-        // API Docs say: "The response body is the created thread channel object."
-        // Wait, how do we get the message ID?
-        // "When creating a thread in a forum channel, the `message` field ... is used to create the starter message."
-        // The response might NOT contain the message ID.
-        // However, for Forum Threads, the starter message ID is OFTEN the same as Thread ID? No, that's not guaranteed.
-        // Actually, let's look at the "last_message_id".
-        // Better yet: we can fetch the messages of the thread immediately.
-        // OR, simply: The starter message is the first message.
-        // Let's assume for now we use the threadId as the ID to reference for updates? 
-        // No, we need message ID to edit the message.
-        // Let's try to fetch the message ID from `id` of the thread. A lot of times `id` of starter message == `id` of thread.
-        // Let's try that. If it fails, we'll need to fetch messages in the thread.
+        // Discord API (forum thread creation) returns the thread channel object.
+        // The starter message ID is stored in the nested "message" field (if present),
+        // otherwise we fall back to the thread ID (they may match for starter messages).
+        String messageId = threadId; // sensible default
+        if (json.has("message") && json.get("message").isJsonObject()) {
+            JsonObject msgObj = json.getAsJsonObject("message");
+            if (msgObj.has("id") && !msgObj.get("id").isJsonNull()) {
+                messageId = msgObj.get("id").getAsString();
+            }
+        }
         
-        return new ThreadResult(threadId, threadId); 
+        plugin.getLogger().info("Forum post created — threadId=" + threadId + " messageId=" + messageId);
+        return new ThreadResult(threadId, messageId);
     }
 
     public static class ThreadResult {

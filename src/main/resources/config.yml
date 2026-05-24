@@ -1,4 +1,9 @@
 # MinimalPrice Configuration
-locale: en
+# Язык сообщений: ru (Russian) или en (English)
+language: en
+
+# Символ валюты (например: $, ₽, €)
 currency: '$'
+
+# ID форум-канала Discord для синхронизации цен
 discord_forum_channel_id: "000000000000000000"

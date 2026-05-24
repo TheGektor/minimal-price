@@ -5,7 +5,32 @@ All notable changes to the "MinimalPrice" project will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-05-24
+
+### Added
+- **New Commands:**
+  - `/minimal delete category <name>` — Deletes a category and all its items (with cascade Discord thread cleanup).
+  - `/minimal delete goods <category> <item>` — Removes a single item from a category.
+  - `/minimal list` — Shows all categories with their items in one output. Useful for quick auditing.
+  - `/minimal info` — Displays plugin statistics: number of categories and total items.
+  - `/minimal set price <category> <item> <price>` — Explicit subcommand for updating a price (previously only `add price` worked).
+- **New Events:** `CategoryDeleteEvent`, `ProductDeleteEvent` — allow other plugins/modules to react to deletions.
+- **permission `minimalprice.admin`** — registered in `plugin.yml` as a convenience node that grants both `view` and `edit` permissions (matches README docs).
+
+### Fixed
+- **Command typo `"kategori"`** — `create` and `set` subcommands incorrectly required the literal string `"kategori"` instead of `"category"`, making the commands non-functional as documented. Now fixed to `"category"`.
+- **`ConfigManager` duplication in `DiscordManager`** — A new `ConfigManager` instance was created on **every call** to `buildComponents()`. Now a single shared instance is injected via constructor, eliminating redundant file I/O.
+- **Discord `messageId` parsing** — `DiscordRestUtil` was using `threadId` as `messageId` (with "assume" comments). Now correctly reads the `message.id` field from the Discord API response with `threadId` as fallback.
+- **`locale` → `language` key inconsistency** — `config.yml` used `locale` but README documented it as `language`. Both the config and `ConfigManager` now consistently use `language`.
+
+### Changed
+- **`DiscordManager` constructor** now requires a `ConfigManager` parameter (constructor signature changed — not backwards compatible if you had custom integrations).
+- **Version bump:** `1.0.3` → `2.0.0`.
+
+---
+
 ## [1.0.0] - 2026-01-17
+
 
 ### Added
 - **Core Price Management:**
@@ -46,7 +71,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Все заметные изменения проекта "MinimalPrice" будут задокументированы в этом файле.
 
+## [2.0.0] - 2026-05-24
+
+### Добавлено
+- **Новые команды:**
+  - `/minimal delete category <name>` — Удаляет категорию и все её товары (с каскадным удалением треда в Discord).
+  - `/minimal delete goods <category> <item>` — Удаляет конкретный товар из категории.
+  - `/minimal list` — Выводит все категории с товарами одним списком. Удобно для быстрого аудита.
+  - `/minimal info` — Выводит статистику плагина: количество категорий и товаров.
+  - `/minimal set price <category> <item> <price>` — Явная подкоманда для изменения цены.
+- **Новые события:** `CategoryDeleteEvent`, `ProductDeleteEvent` — другие плагины могут подписываться на удаление.
+- **Право `minimalprice.admin`** — зарегистрировано в `plugin.yml` как узел-агрегатор для `view` + `edit` (соответствует README).
+
+### Исправлено
+- **Опечатка `"kategori"` в командах** — подкоманды `create` и `set` требовали строку `"kategori"` вместо `"category"`, что делало их нефункциональными. Исправлено.
+- **Дублирование `ConfigManager`** — в методе `buildComponents()` создавался новый экземпляр на каждый вызов. Теперь передаётся через конструктор.
+- **Парсинг `messageId` Discord** — вместо хака `threadId = messageId` теперь корректно читается поле `message.id` из ответа Discord API.
+- **Несоответствие ключей `locale` / `language`** — в `config.yml` был `locale`, а README описывал `language`. Унифицировано на `language`.
+
+### Изменено
+- **Конструктор `DiscordManager`** теперь принимает `ConfigManager` (не совместимо с кастомными интеграциями).
+- **Версия:** `1.0.3` → `2.0.0`.
+
+---
+
 ## [1.0.0] - 2026-01-17
+
 
 ### Добавлено
 - **Управление ценами (Ядро):**
