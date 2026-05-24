@@ -103,6 +103,52 @@ public class PriceRepository {
         return products;
     }
 
+    /**
+     * Deletes a category and all its products (cascade).
+     *
+     * @param name the category name
+     * @return number of deleted rows (0 if not found)
+     */
+    public int deleteCategory(String name) throws SQLException {
+        int categoryId = getCategoryId(name);
+        if (categoryId == -1) return 0;
+
+        // Delete products first (no FK cascade in plain SQLite without pragma)
+        String deleteItems = "DELETE FROM mp_items WHERE category_id = ?";
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(deleteItems)) {
+            stmt.setInt(1, categoryId);
+            stmt.executeUpdate();
+        }
+
+        String deleteCategory = "DELETE FROM mp_categories WHERE id = ?";
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(deleteCategory)) {
+            stmt.setInt(1, categoryId);
+            return stmt.executeUpdate();
+        }
+    }
+
+    /**
+     * Deletes a specific product from a category.
+     *
+     * @param categoryName the category name
+     * @param productName  the product name
+     * @return number of deleted rows (0 if not found)
+     */
+    public int deleteProduct(String categoryName, String productName) throws SQLException {
+        int categoryId = getCategoryId(categoryName);
+        if (categoryId == -1) return 0;
+
+        String sql = "DELETE FROM mp_items WHERE category_id = ? AND name = ?";
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, categoryId);
+            stmt.setString(2, productName);
+            return stmt.executeUpdate();
+        }
+    }
+
     private int getCategoryId(String name) throws SQLException {
         String sql = "SELECT id FROM mp_categories WHERE name = ?";
         try (Connection conn = databaseManager.getConnection();

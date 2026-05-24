@@ -13,6 +13,13 @@ permissions:
   minimalprice.edit:
     description: Allows editing the price list.
     default: op
+  minimalprice.admin:
+    description: Allows all administrative actions (alias for minimalprice.edit).
+    default: op
+    children:
+      minimalprice.view: true
+      minimalprice.edit: true
+
 
 commands:
   minimal:

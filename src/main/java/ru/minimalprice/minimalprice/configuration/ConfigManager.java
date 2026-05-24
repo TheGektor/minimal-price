@@ -22,7 +22,7 @@ public class ConfigManager {
     }
 
     public void loadLocale() {
-        String locale = plugin.getConfig().getString("locale", "en");
+        String locale = plugin.getConfig().getString("language", "en");
         File langFile = new File(plugin.getDataFolder(), "languages/messages_" + locale + ".yml");
         
         if (!langFile.exists()) {
